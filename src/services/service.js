@@ -1,12 +1,14 @@
 const cron = require("node-cron");
-const User = require("./model");
-const sendBirthdayEmail = require("./sendEmail");
+const User = require("../models/model");
+const sendBirthdayEmail = require("../utils/sendEmail");
 
 const sendBirthdayMsg = () => {
   const schedule = process.env.CRON_SCHEDULE || "0 7 * * *"; // default 7AM
 
   cron.schedule(schedule, async () => {
-    console.log(`Running daily birthday check...${Date.now()}`);
+    console.log(
+      `Running daily birthday check... ${new Date().toLocaleString()}`
+    );
     const users = await getBirthdays();
     if (users.length > 0) {
       sendEmail(users);
