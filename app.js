@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
-const { ConnectToDb } = require("./src/config/db");
+const { testConnection, initDatabase } = require("./src/config/db");
 const userRoute = require("./src/routes/route");
 const { sendBirthdayMsg } = require("./src/services/service");
 
@@ -35,11 +35,14 @@ app.use((req, res) => {
 
 sendBirthdayMsg();
 
-ConnectToDb()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Visit http://localhost:${PORT} to access the form`);
-    });
-  })
-  .catch((error) => console.error(error));
+async function startServer() {
+  await testConnection();
+  await initDatabase();
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Visit http://localhost:${PORT} to access the form`);
+  });
+}
+
+startServer();

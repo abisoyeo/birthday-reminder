@@ -1,5 +1,7 @@
 const cron = require("node-cron");
 const User = require("../models/model");
+const { fn, col, Sequelize } = require("sequelize");
+
 const sendBirthdayEmail = require("../utils/sendEmail");
 
 const sendBirthdayMsg = () => {
@@ -24,13 +26,12 @@ const getBirthdays = async () => {
   const month = today.getUTCMonth() + 1;
   const day = today.getUTCDate();
 
-  const users = await User.find({
-    $expr: {
-      $and: [
-        { $eq: [{ $month: "$dateOfBirth" }, month] },
-        { $eq: [{ $dayOfMonth: "$dateOfBirth" }, day] },
-      ],
-    },
+  const users = await User.findAll({
+    where: Sequelize.where(
+      fn("TO_CHAR", col("dateOfBirth"), "MM-DD"),
+      "=",
+      fn("TO_CHAR", fn("NOW"), "MM-DD")
+    ),
   });
   return users;
 };

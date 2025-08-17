@@ -3,7 +3,7 @@ const User = require("../models/model");
 
 const router = express.Router();
 
-router.post("/users", async (req, res) => {
+router.post("/users", async (req, res, next) => {
   try {
     const { username, email, dob } = req.body;
 
@@ -14,17 +14,16 @@ router.post("/users", async (req, res) => {
       });
     }
 
-    const user = new User({
+    const user = await User.create({
       username: username.trim(),
       email: email.trim().toLowerCase(),
-      dateOfBirth: new Date(dob),
+      dateOfBirth: dob,
     });
 
-    await user.save();
     res.status(201).json({
       message: "User created successfully",
       user: {
-        id: user._id,
+        id: user.id,
         username: user.username,
         email: user.email,
         dateOfBirth: user.dateOfBirth,
@@ -33,16 +32,16 @@ router.post("/users", async (req, res) => {
   } catch (error) {
     console.error("Error creating user:", error);
 
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyValue)[0];
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const field = error.errors[0].path;
       return res.status(400).json({
         error: `${field} already exists`,
         field: field,
       });
     }
 
-    if (error.name === "ValidationError") {
-      const errors = Object.values(error.errors).map((err) => err.message);
+    if (error.name === "SequelizeValidationError") {
+      const errors = error.errors.map((err) => err.message);
       return res.status(400).json({
         error: "Validation failed",
         details: errors,
