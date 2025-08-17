@@ -1,19 +1,25 @@
 const { Sequelize, DataTypes } = require("sequelize");
 
-const sequelize = new Sequelize(
-  process.env.DATABASE_URL ||
-    "postgres://username:password@localhost:5432/userdb",
-  {
-    dialect: "postgres",
-    logging: false, // Set to console.log to see SQL queries
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000,
-    },
-  }
-);
+const useSSL = process.env.DB_SSL === "true";
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+  logging: false,
+  dialectOptions: useSSL
+    ? {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      }
+    : {},
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
+});
 async function testConnection() {
   try {
     await sequelize.authenticate();
